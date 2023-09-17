@@ -1,0 +1,254 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jul 28 12:45:09 2023
+
+@author: viro
+"""
+'''
+# this script is for the classification of t cell cytotoxic peptides
+### Step1### The first step is to copy the peptides from excell sheet into csv file.
+'''
+
+############# convert peptides from csv file into a list using pandas  ###########
+
+#import the library
+import pandas as pd
+
+#create a pandas dataframe
+t_cell_pos = pd.read_csv("T_Cell_pos_17_Sept_2023.csv")
+
+#print to see the content of the newly created dataframe
+print(t_cell_pos)
+
+#examine the type of the dataframe
+type(t_cell_pos.shape)
+
+#convert this dataframe (tupple) into list
+t_cell_pos_lst = t_cell_pos["Epitope"].to_list()
+
+#check the type of newly created list
+type(t_cell_pos_lst)
+
+#print this list
+print(t_cell_pos_lst)
+
+#print the length of this list
+len(t_cell_pos_lst)
+#1132
+
+#it can be seen that the first element of the list is "name" which is not required.
+t_cell_pos_lst.remove("Name")
+
+#print the list with name removed
+print(t_cell_pos_lst)
+
+#check the length of the list with name removed
+len(t_cell_pos_lst)
+#1131
+
+#####################################   processing negative dataset ###########################
+
+#create a pandas dataframe
+t_cell_neg = pd.read_csv("T_Cell_Neg_17_Sept_2023.csv")
+
+#print to see the content of the newly created dataframe
+print(t_cell_neg)
+
+#examine the type of the dataframe
+type(t_cell_neg.shape)
+
+#convert this dataframe (tupple) into list
+t_cell_neg_lst = t_cell_neg["Epitope"].to_list()
+
+#check the type of newly created list
+type(t_cell_neg_lst)
+
+#print this list
+print(t_cell_neg_lst)
+
+#print the length of this list
+len(t_cell_neg_lst)
+#3123
+
+#it can be seen that the first element of the list is "name" which is not required.
+t_cell_neg_lst.remove("Name")
+
+#print the list with name removed
+print(t_cell_neg_lst)
+
+#check the length of the list with name removed
+len(t_cell_neg_lst)
+#3122
+
+#####################################   Removing dulplicates from pos and neg lists  ###########################
+
+#removing the common peptides from both the lists
+
+for i in t_cell_neg_lst[:]:
+    if i in t_cell_pos_lst:
+        t_cell_neg_lst.remove(i)
+        t_cell_pos_lst.remove(i)
+        
+        
+#checking the number of peptides left in positive and negative lists        
+
+len(t_cell_pos_lst)        
+#first it was 1132 and now it is 865
+
+len(t_cell_neg_lst)
+#first it was 3122 and now it is 2856
+
+######### Remove the dulplictes from among the list using set function ####
+tcell_pos_unique = list(set(t_cell_pos_lst))
+
+len(tcell_pos_unique)
+#864
+
+#removal from negative list
+tcell_neg_unique = (list(set(t_cell_neg_lst)))
+
+len(tcell_neg_unique)
+#2856
+
+########## check for the length of peptide in positive list######
+
+#create empty list
+tcell_pos_len = []
+
+#use for loop to append each peptide count into empty list
+for i in tcell_pos_unique:
+    tcell_pos_len.append(len(i))
+
+#print the list containing length
+print(tcell_pos_len)
+
+#plot the length into histogram
+
+#use counter function to count each number
+from collections import Counter
+
+pos_len = Counter(tcell_pos_len)
+pos_len
+
+#visualize the pos length
+import matplotlib.pyplot as plt
+
+#plot histogram
+plt.hist(tcell_pos_len, bins=20)
+
+########## check for the length of peptide in negative list######
+
+#create empty list
+tcell_neg_len = []
+
+#use for loop to append each peptide count into empty list
+for i in tcell_neg_unique:
+    tcell_neg_len.append(len(i))
+
+#print the list containing length
+print(tcell_neg_len)
+
+#plot the length into histogram
+neg_len = Counter(tcell_neg_len)
+neg_len
+
+#plot histogram
+plt.hist(tcell_neg_len, bins=20)
+
+######## the plots suggest that we can include the peptides from 5 to 40 amino acids in both pos and neg ###########
+
+#check length of the peptide
+len(tcell_pos_unique)
+#864
+
+#############################      creating a list of pos peptides with 5-40 peptides        ##########################
+#positive peptides
+tcell_pos_5_40 = []
+
+for i in tcell_pos_unique:
+    if len(i) >= 5 and len(i) <=40:
+        tcell_pos_5_40.append(i)
+
+#calculating the length of positive list
+len(tcell_pos_5_40)
+#862
+
+#negative peptides
+#check length of the peptide
+len(tcell_neg_unique)
+#2856
+
+#creating a list of pos peptides with 5-40 peptides
+tcell_neg_5_40 = []
+
+
+for i in tcell_neg_unique:
+    if len(i) >= 5 and len(i) <=40:
+        tcell_neg_5_40.append(i)
+
+#calculating the length of positive list
+len(tcell_neg_5_40)
+#2855
+
+
+    
+######## chatgpt code to remove psptides containing animo acids other then common ones ###########
+# List of amino acids
+
+
+# Function to check if an amino acid sequence contains only valid characters
+def is_valid_amino_acid(sequence):
+    valid_characters = "ACDEFGHIKLMNPQRSTVWY"
+    return all(char in valid_characters for char in sequence)
+
+# Filter out invalid amino acids from the positive list and save them in a new list
+tcell_pos_final = [aa for aa in tcell_pos_5_40 if is_valid_amino_acid(aa)]
+
+# Print the final list
+print(tcell_pos_final)
+
+#calculate the length of the final positive list
+len(tcell_pos_final)                 
+#862  
+
+# Filter out invalid amino acids from the negative list and save them in a new list
+tcell_neg_final = [aa for aa in tcell_neg_5_40 if is_valid_amino_acid(aa)]
+
+# Print the final list
+print(tcell_neg_final)
+
+#calculate the length of the final positive list
+len(tcell_neg_final)                 
+#2855
+
+
+##########################  Writting the final cleaned positive and negative lists into finles ##################
+
+#writting the unique positive peptides into a text file
+with open ("tcell_pos_5_40.txt", "w") as wf:
+    for i in tcell_pos_final:
+        wf.write(i + "\n")
+
+
+#writting the unique negative peptides into a text file
+with open ("tcell_neg_5_40.txt", "w") as wf:
+    for i in tcell_neg_final:
+        wf.write(i + "\n")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
